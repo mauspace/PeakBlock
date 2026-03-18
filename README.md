@@ -1,6 +1,6 @@
-# AppBlock — Expo + Zustand
+# PeakBlock — Expo + Zustand
 
-A minimal, modern screen-time blocker app inspired by the AppBlock UI.
+A premium, modern screen-time blocker app featuring the **Focus Without Limits** identity.
 
 ## Stack
 - **Expo** (SDK 52) + **Expo Router** v4
