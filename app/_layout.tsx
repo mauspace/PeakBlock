@@ -12,15 +12,22 @@ import {
   DMSans_500Medium
 } from '@expo-google-fonts/dm-sans';
 
+import { useBlockStore } from '../store/blockStore';
+
 SplashScreen.preventAutoHideAsync();
 
 export default function RootLayout() {
+  const syncFromCloud = useBlockStore((state) => state.syncFromCloud);
   const [loaded, error] = useFonts({
     SyneExtraBold: Syne_800ExtraBold,
     SyneSemiBold: Syne_600SemiBold,
     DMSansRegular: DMSans_400Regular,
     DMSansMedium: DMSans_500Medium,
   });
+
+  useEffect(() => {
+    syncFromCloud();
+  }, [syncFromCloud]);
 
   useEffect(() => {
     if (loaded || error) {

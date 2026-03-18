@@ -16,7 +16,7 @@ import AddBlockModal from '../../components/AddBlockModal';
 import StatsHeader from '../../components/StatsHeader';
 
 export default function BlockingScreen() {
-  const { blocks } = useBlockStore();
+  const { blocks, isLoading } = useBlockStore();
   const [showModal, setShowModal] = useState(false);
 
   return (
@@ -28,6 +28,13 @@ export default function BlockingScreen() {
           <View>
             <Text style={styles.headerTitle}>PeakBlock</Text>
             <Text style={styles.headerTagline}>Focus Without Limits</Text>
+          </View>
+          <View style={styles.headerActions}>
+            <MaterialCommunityIcons 
+              name={isLoading ? "cloud-sync" : "cloud-check"} 
+              size={20} 
+              color={isLoading ? "#8B85CC" : "#5B5BD6"} 
+            />
           </View>
         </View>
 
@@ -78,6 +85,15 @@ const styles = StyleSheet.create({
     paddingTop: 12,
     paddingBottom: 8,
     marginBottom: 10,
+  },
+  headerActions: {
+    padding: 8,
+    borderRadius: 12,
+    backgroundColor: '#ffffff',
+    ...Platform.select({
+      ios: { shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.05, shadowRadius: 4 },
+      android: { elevation: 2 },
+    } as any),
   },
   headerTitle: {
     fontSize: 32,

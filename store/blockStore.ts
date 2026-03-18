@@ -1,6 +1,16 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { db } from '../lib/firebase';
+import { 
+  collection, 
+  doc, 
+  setDoc, 
+  deleteDoc, 
+  onSnapshot,
+  query,
+  getDocs
+} from 'firebase/firestore';
 
 export type BlockType = 'focus' | 'app_limit' | 'custom' | 'relaxation';
 
@@ -22,103 +32,131 @@ interface BlockStore {
   blocks: Block[];
   totalScreenTime: number;
   hasCompletedOnboarding: boolean;
-  addBlock: (block: Omit<Block, 'id'>) => void;
-  toggleBlock: (id: string) => void;
-  removeBlock: (id: string) => void;
-  updateBlock: (id: string, updates: Partial<Block>) => void;
-  toggleBlockedApp: (blockId: string, appName: string) => void;
+  addBlock: (block: Omit<Block, 'id'>) => Promise<void>;
+  toggleBlock: (id: string) => Promise<void>;
+  removeBlock: (id: string) => Promise<void>;
+  updateBlock: (id: string, updates: Partial<Block>) => Promise<void>;
+  toggleBlockedApp: (blockId: string, appName: string) => Promise<void>;
   completeOnboarding: () => void;
+  syncFromCloud: () => void;
+  isLoading: boolean;
 }
 
-const initialBlocks: Block[] = [
-  {
-    id: '1',
-    type: 'focus',
-    name: 'Deep Work',
-    icon: 'bullseye-arrow',
-    gradientColors: ['#5B5BD6', '#8B5CF6'],
-    schedule: 'Mon–Fri, 9:00–12:00',
-    tagline: 'Stay focused on your most important tasks.',
-    isEnabled: true,
-    usageLimit: 120,
-    blockedApps: ['Instagram', 'TikTok', 'Twitter'],
-  },
-  {
-    id: '2',
-    name: 'App Limit',
-    icon: 'timer-outline',
-    gradientColors: ['#0D0C1D', '#4040B8'],
-    schedule: 'Every day, Usage limit: 30m',
-    tagline: 'Free yourself from nonstop scrolling.',
-    type: 'app_limit',
-    isEnabled: false,
-    usageLimit: 30,
-    blockedApps: ['Facebook', 'YouTube'],
-  },
-  {
-    id: '3',
-    name: 'Time for Myself',
-    icon: 'cake-variant-outline',
-    gradientColors: ['#FF6B6B', '#FFA94D'],
-    schedule: 'Weekdays, 5:00 PM – 6:00 PM',
-    tagline: 'Dedicated time for self-care and relaxation.',
-    type: 'relaxation',
-    isEnabled: true,
-    blockedApps: ['Work Mail', 'Slack'],
-  },
-];
+const COLLECTION_NAME = 'blocks';
 
 export const useBlockStore = create<BlockStore>()(
   persist(
-    (set) => ({
+    (set, get) => ({
       totalScreenTime: 63,
-      blocks: initialBlocks,
+      blocks: [],
       hasCompletedOnboarding: false,
+      isLoading: false,
       completeOnboarding: () => set({ hasCompletedOnboarding: true }),
-      addBlock: (blockData) =>
+      
+      syncFromCloud: () => {
+        set({ isLoading: true });
+        const q = query(collection(db, COLLECTION_NAME));
+        return onSnapshot(q, 
+          (snapshot) => {
+            const blocks = snapshot.docs.map(doc => ({ ...doc.data(), id: doc.id } as Block));
+            set({ blocks, isLoading: false });
+          },
+          (error) => {
+            console.error('Firestore sync error:', error);
+            set({ isLoading: false });
+          }
+        );
+      },
+
+      addBlock: async (blockData) => {
+        const docRef = doc(collection(db, COLLECTION_NAME));
+        const newBlock: Block = {
+          ...blockData,
+          id: docRef.id,
+          blockedApps: blockData.blockedApps || [],
+        };
+        
+        // Optimistic update
+        set((state) => ({ blocks: [...state.blocks, newBlock] }));
+        
+        try {
+          await setDoc(docRef, newBlock);
+        } catch (error) {
+          console.error('Error adding block to Firestore:', error);
+          // Rollback if needed, but let's keep it simple for now
+        }
+      },
+
+      toggleBlock: async (id) => {
+        const block = get().blocks.find(b => b.id === id);
+        if (!block) return;
+        
+        const updatedBlock = { ...block, isEnabled: !block.isEnabled };
+        
         set((state) => ({
-          blocks: [
-            ...state.blocks,
-            {
-              ...blockData,
-              id: Math.random().toString(36).substring(7),
-              blockedApps: blockData.blockedApps || [], // Ensure blockedApps is an array
-            },
-          ],
-        })),
-      toggleBlock: (id) =>
-        set((state) => ({
-          blocks: state.blocks.map((b) =>
-            b.id === id ? { ...b, isEnabled: !b.isEnabled } : b
-          ),
-        })),
-      removeBlock: (id) =>
+          blocks: state.blocks.map((b) => b.id === id ? updatedBlock : b),
+        }));
+        
+        try {
+          await setDoc(doc(db, COLLECTION_NAME, id), updatedBlock);
+        } catch (error) {
+          console.error('Error toggling block in Firestore:', error);
+        }
+      },
+
+      removeBlock: async (id) => {
         set((state) => ({
           blocks: state.blocks.filter((b) => b.id !== id),
-        })),
-      updateBlock: (id, updates) =>
+        }));
+        try {
+          await deleteDoc(doc(db, COLLECTION_NAME, id));
+        } catch (error) {
+          console.error('Error removing block from Firestore:', error);
+        }
+      },
+
+      updateBlock: async (id, updates) => {
+        const block = get().blocks.find(b => b.id === id);
+        if (!block) return;
+        
+        const updatedBlock = { ...block, ...updates };
+        
         set((state) => ({
-          blocks: state.blocks.map((b) =>
-            b.id === id ? { ...b, ...updates } : b
-          ),
-        })),
-      toggleBlockedApp: (blockId, appName) =>
+          blocks: state.blocks.map((b) => b.id === id ? updatedBlock : b),
+        }));
+        
+        try {
+          await setDoc(doc(db, COLLECTION_NAME, id), updatedBlock);
+        } catch (error) {
+          console.error('Error updating block in Firestore:', error);
+        }
+      },
+
+      toggleBlockedApp: async (blockId, appName) => {
+        const block = get().blocks.find(b => b.id === blockId);
+        if (!block) return;
+
+        const currentApps = block.blockedApps || [];
+        const exists = currentApps.includes(appName);
+        const updatedApps = exists
+          ? currentApps.filter((a) => a !== appName)
+          : [...currentApps, appName];
+        
+        const updatedBlock = { ...block, blockedApps: updatedApps };
+        
         set((state) => ({
-          blocks: state.blocks.map((b) => {
-            if (b.id !== blockId) return b;
-            const currentApps = b.blockedApps || []; // Ensure currentApps is an array
-            const exists = currentApps.includes(appName);
-            return {
-              ...b,
-              blockedApps: exists
-                ? currentApps.filter((a) => a !== appName)
-                : [...currentApps, appName],
-            };
-          }),
-        })),
+          blocks: state.blocks.map((b) => b.id === blockId ? updatedBlock : b),
+        }));
+        
+        try {
+          await setDoc(doc(db, COLLECTION_NAME, blockId), updatedBlock);
+        } catch (error) {
+          console.error('Error updating blocked apps in Firestore:', error);
+        }
+      },
     }),
     {
-      name: 'peakblock-storage', // Updated storage name
+      name: 'peakblock-storage',
       storage: createJSONStorage(() => AsyncStorage),
     }
   )

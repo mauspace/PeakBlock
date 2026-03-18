@@ -3,7 +3,7 @@
 A premium, modern screen-time blocker app featuring the **Focus Without Limits** identity.
 
 ## Stack
-- **Expo** (SDK 52) + **Expo Router** v4
+- **Expo** (SDK 55) + **Expo Router** v7
 - **Zustand** for state management
 - **@expo/vector-icons** (MaterialCommunityIcons)
 - **TypeScript**
@@ -20,6 +20,14 @@ Then press:
 - `i` for iOS Simulator
 - `a` for Android Emulator
 - Scan QR with **Expo Go** app on your phone
+
+## Environment Variables
+This project uses the Expo-native environment variable system. Copy `.env.example` to `.env` and ensure all variables are prefixed with `EXPO_PUBLIC_`:
+
+```bash
+EXPO_PUBLIC_FIREBASE_API_KEY=xxx
+# ...
+```
 
 ## File Structure
 
