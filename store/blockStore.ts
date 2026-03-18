@@ -9,24 +9,25 @@ export interface Block {
   type: BlockType;
   name: string;
   icon: string;
-  iconColor: string;
-  gradientColors?: string[];
+  gradientColors: string[];
   schedule: string;
   tagline: string;
-  enabled: boolean;
+  isEnabled: boolean;
   usageLimit?: number; // minutes
   usedMinutes?: number;
-  blockedApps?: string[];
+  blockedApps: string[];
 }
 
 interface BlockStore {
   blocks: Block[];
-  totalScreenTime: number; // minutes today
+  totalScreenTime: number;
+  hasCompletedOnboarding: boolean;
   addBlock: (block: Omit<Block, 'id'>) => void;
   toggleBlock: (id: string) => void;
   removeBlock: (id: string) => void;
   updateBlock: (id: string, updates: Partial<Block>) => void;
   toggleBlockedApp: (blockId: string, appName: string) => void;
+  completeOnboarding: () => void;
 }
 
 const initialBlocks: Block[] = [
@@ -35,49 +36,35 @@ const initialBlocks: Block[] = [
     type: 'focus',
     name: 'Deep Work',
     icon: 'bullseye-arrow',
-    iconColor: '#6D5BFF',
-    gradientColors: ['#6D5BFF', '#A27DFF'],
+    gradientColors: ['#5B5BD6', '#8B5CF6'],
     schedule: 'Mon–Fri, 9:00–12:00',
     tagline: 'Stay focused on your most important tasks.',
-    enabled: true,
+    isEnabled: true,
     usageLimit: 120,
-    usedMinutes: 45,
-    blockedApps: ['Slack', 'Chrome', 'Mail'],
+    blockedApps: ['Instagram', 'TikTok', 'Twitter'],
   },
   {
     id: '2',
-    type: 'relaxation',
-    name: 'Evening Chill',
-    icon: 'cake-variant-outline',
-    iconColor: '#FF6B6B',
-    gradientColors: ['#FF6B6B', '#FFA94D'],
-    schedule: 'Daily, 20:00–22:00',
-    tagline: 'Time to disconnect and recharge.',
-    enabled: true,
-    blockedApps: ['Instagram', 'TikTok', 'X'],
+    name: 'App Limit',
+    icon: 'timer-outline',
+    gradientColors: ['#0D0C1D', '#4040B8'],
+    schedule: 'Every day, Usage limit: 30m',
+    tagline: 'Free yourself from nonstop scrolling.',
+    type: 'app_limit',
+    isEnabled: false,
+    usageLimit: 30,
+    blockedApps: ['Facebook', 'YouTube'],
   },
   {
     id: '3',
-    type: 'app_limit',
-    name: 'App Limit',
-    icon: 'timer-outline',
-    iconColor: '#2A3A4A',
-    schedule: 'Every day, Usage limit: 30m',
-    tagline: 'Free yourself from nonstop scrolling.',
-    enabled: true,
-    usageLimit: 30,
-    usedMinutes: 18,
-  },
-  {
-    id: '4', // Changed ID to avoid duplicate
-    type: 'custom',
     name: 'Time for Myself',
     icon: 'cake-variant-outline',
-    iconColor: '#FF6B6B',
     gradientColors: ['#FF6B6B', '#FFA94D'],
     schedule: 'Weekdays, 5:00 PM – 6:00 PM',
     tagline: 'Dedicated time for self-care and relaxation.',
-    enabled: false,
+    type: 'relaxation',
+    isEnabled: true,
+    blockedApps: ['Work Mail', 'Slack'],
   },
 ];
 
@@ -86,39 +73,52 @@ export const useBlockStore = create<BlockStore>()(
     (set) => ({
       totalScreenTime: 63,
       blocks: initialBlocks,
+      hasCompletedOnboarding: false,
+      completeOnboarding: () => set({ hasCompletedOnboarding: true }),
       addBlock: (blockData) =>
         set((state) => ({
           blocks: [
             ...state.blocks,
-            { ...blockData, id: Math.random().toString(36).substring(7) },
+            {
+              ...blockData,
+              id: Math.random().toString(36).substring(7),
+              blockedApps: blockData.blockedApps || [], // Ensure blockedApps is an array
+            },
           ],
         })),
       toggleBlock: (id) =>
         set((state) => ({
           blocks: state.blocks.map((b) =>
-            b.id === id ? { ...b, enabled: !b.enabled } : b
+            b.id === id ? { ...b, isEnabled: !b.isEnabled } : b
           ),
         })),
       removeBlock: (id) =>
-        set((state) => ({ blocks: state.blocks.filter((b) => b.id !== id) })),
+        set((state) => ({
+          blocks: state.blocks.filter((b) => b.id !== id),
+        })),
       updateBlock: (id, updates) =>
         set((state) => ({
-          blocks: state.blocks.map((b) => (b.id === id ? { ...b, ...updates } : b)),
+          blocks: state.blocks.map((b) =>
+            b.id === id ? { ...b, ...updates } : b
+          ),
         })),
       toggleBlockedApp: (blockId, appName) =>
         set((state) => ({
           blocks: state.blocks.map((b) => {
             if (b.id !== blockId) return b;
-            const currentApps = b.blockedApps || [];
-            const newApps = currentApps.includes(appName)
-              ? currentApps.filter((a) => a !== appName)
-              : [...currentApps, appName];
-            return { ...b, blockedApps: newApps };
+            const currentApps = b.blockedApps || []; // Ensure currentApps is an array
+            const exists = currentApps.includes(appName);
+            return {
+              ...b,
+              blockedApps: exists
+                ? currentApps.filter((a) => a !== appName)
+                : [...currentApps, appName],
+            };
           }),
         })),
     }),
     {
-      name: 'block-storage',
+      name: 'peakblock-storage', // Updated storage name
       storage: createJSONStorage(() => AsyncStorage),
     }
   )

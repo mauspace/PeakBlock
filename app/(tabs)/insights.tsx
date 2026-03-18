@@ -2,65 +2,70 @@ import React from 'react';
 import {
   View,
   Text,
-  StyleSheet,
-  SafeAreaView,
   ScrollView,
+  StyleSheet,
+  TouchableOpacity,
+  SafeAreaView,
+  StatusBar,
   Platform,
 } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import BarChart from '../../components/BarChart';
+import MostUsedApps from '../../components/MostUsedApps';
 
 export default function InsightsScreen() {
+  // Placeholder for totalScreenTime, as it's used in the new code but not defined in the snippet.
+  // In a real app, this would likely come from state or props.
+  const totalScreenTime = '12.5h';
+
   return (
     <SafeAreaView style={styles.container}>
-      <ScrollView
-        showsVerticalScrollIndicator={false}
-        contentContainerStyle={styles.scrollContent}
-      >
-        <Text style={styles.header}>Activity Insights</Text>
-        
-        {/* Main Chart Card */}
-        <View style={styles.card}>
-          <View style={styles.cardHeader}>
-            <Text style={styles.cardTitle}>Time Saved (Minutes)</Text>
-            <Text style={styles.cardSubtitle}>Last 7 Days</Text>
+      <StatusBar barStyle="dark-content" />
+      <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+        <View style={styles.header}>
+          <Text style={styles.headerSubtitle}>Weekly Overview</Text>
+          <View style={styles.totalRow}>
+            <Text style={styles.totalValue}>{totalScreenTime}</Text>
+            <Text style={styles.totalLabel}>HOURS SAVED</Text>
+          </View>
+        </View>
+
+        <View style={styles.statCards}>
+          <View style={[styles.statCard, { borderLeftColor: '#22C55E' }]}>
+            <View style={styles.statIconWrap}>
+              <MaterialCommunityIcons name="trending-down" size={20} color="#22C55E" />
+            </View>
+            <View>
+              <Text style={styles.statCardValue}>-23%</Text>
+              <Text style={styles.statCardLabel}>This Week</Text>
+            </View>
+          </View>
+          <View style={[styles.statCard, { borderLeftColor: '#5B5BD6' }]}>
+            <View style={styles.statIconWrap}>
+              <MaterialCommunityIcons name="clock-outline" size={20} color="#5B5BD6" />
+            </View>
+            <View>
+              <Text style={styles.statCardValue}>3.5h</Text>
+              <Text style={styles.statCardLabel}>Daily Avg</Text>
+            </View>
+          </View>
+        </View>
+
+        <View style={styles.chartSection}>
+          <View style={styles.sectionHeader}>
+            <Text style={styles.sectionTitle}>Activity</Text>
+            <TouchableOpacity>
+              <Text style={styles.seeMore}>This Week</Text>
+            </TouchableOpacity>
           </View>
           <BarChart />
-          <View style={styles.summaryBox}>
-            <MaterialCommunityIcons name="trending-up" size={20} color="#69DB7C" />
-            <Text style={styles.summaryText}>
-              You saved <Text style={styles.highlight}>12% more</Text> time than last week.
-            </Text>
-          </View>
         </View>
 
-        {/* Stats Grid */}
-        <View style={styles.statsGrid}>
-          <View style={[styles.statCard, { flex: 1 }]}>
-            <View style={[styles.statIcon, { backgroundColor: '#eef7ff' }]}>
-              <MaterialCommunityIcons name="clock-check" size={24} color="#4A9EFF" />
-            </View>
-            <Text style={styles.statValue}>6.4h</Text>
-            <Text style={styles.statLabel}>Daily Average</Text>
+        <View style={styles.appsSection}>
+          <View style={styles.sectionHeader}>
+            <Text style={styles.sectionTitle}>Most Used Apps</Text>
           </View>
-
-          <View style={[styles.statCard, { flex: 1 }]}>
-            <View style={[styles.statIcon, { backgroundColor: '#fdf2f2' }]}>
-              <MaterialCommunityIcons name="shield-check" size={24} color="#FF6B6B" />
-            </View>
-            <Text style={styles.statValue}>42</Text>
-            <Text style={styles.statLabel}>Blocks Prevented</Text>
-          </View>
-        </View>
-
-        <View style={styles.bottomCard}>
-          <View style={styles.bottomCardContent}>
-            <Text style={styles.bottomTitle}>Weekly Goal</Text>
-            <Text style={styles.bottomText}>85% focus reached this week.</Text>
-          </View>
-          <View style={styles.progressCircle}>
-            <Text style={styles.progressText}>85%</Text>
-          </View>
+          <MostUsedApps />
         </View>
       </ScrollView>
     </SafeAreaView>
@@ -70,133 +75,100 @@ export default function InsightsScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f8f9fb',
+    backgroundColor: '#F4F3FF',
   },
   scrollContent: {
-    padding: 20,
+    padding: 24,
     paddingBottom: 40,
   },
   header: {
-    fontSize: 24,
-    fontWeight: '800',
-    color: '#1a1a1a',
-    letterSpacing: -1,
-    marginBottom: 24,
+    marginBottom: 32,
+    marginTop: 10,
   },
-  card: {
-    backgroundColor: '#ffffff',
-    borderRadius: 24,
-    padding: 20,
-    marginBottom: 20,
-    borderWidth: 1,
-    borderColor: '#f0f0f0',
+  headerSubtitle: {
+    fontSize: 11,
+    fontFamily: 'DMSansMedium',
+    color: '#8B85CC',
+    textTransform: 'uppercase',
+    letterSpacing: 2,
+    marginBottom: 8,
+  },
+  totalRow: {
+    flexDirection: 'row',
+    alignItems: 'baseline',
+    gap: 12,
+  },
+  totalValue: {
+    fontSize: 56,
+    fontFamily: 'SyneExtraBold',
+    color: '#111',
+    letterSpacing: -2,
+  },
+  totalLabel: {
+    fontSize: 16,
+    fontFamily: 'SyneSemiBold',
+    color: '#5B5BD6',
+  },
+  statCards: {
+    flexDirection: 'row',
+    gap: 12,
+    marginBottom: 32,
+  },
+  statCard: {
+    flex: 1,
+    backgroundColor: '#fff',
+    borderRadius: 20,
+    padding: 16,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    borderLeftWidth: 4,
     ...Platform.select({
-      ios: {
-        shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.05, shadowRadius: 10,
-      },
+      ios: { shadowColor: '#5B5BD6', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.04, shadowRadius: 10 },
       android: { elevation: 2 },
     } as any),
   },
-  cardHeader: {
-    marginBottom: 10,
-  },
-  cardTitle: {
-    fontSize: 18,
-    fontWeight: '700',
-    color: '#1a1a1a',
-  },
-  cardSubtitle: {
-    fontSize: 14,
-    color: '#999',
-    fontWeight: '500',
-    marginTop: 2,
-  },
-  summaryBox: {
-    flexDirection: 'row',
+  statIconWrap: {
+    width: 36,
+    height: 36,
+    borderRadius: 10,
+    backgroundColor: '#F4F3FF',
     alignItems: 'center',
-    backgroundColor: '#f6fbf7',
-    padding: 12,
-    borderRadius: 12,
-    marginTop: 10,
-    gap: 8,
+    justifyContent: 'center',
   },
-  summaryText: {
-    fontSize: 14,
-    color: '#666',
-    fontWeight: '500',
+  statCardValue: {
+    fontSize: 18,
+    fontFamily: 'SyneExtraBold',
+    color: '#111',
   },
-  highlight: {
-    color: '#69DB7C',
-    fontWeight: '700',
+  statCardLabel: {
+    fontSize: 12,
+    fontFamily: 'DMSansRegular',
+    color: '#8B85CC',
   },
-  statsGrid: {
-    flexDirection: 'row',
-    gap: 16,
+  chartSection: {
+    marginBottom: 32,
+  },
+  appsSection: {
     marginBottom: 20,
   },
-  statCard: {
-    backgroundColor: '#ffffff',
-    borderRadius: 24,
-    padding: 20,
-    borderWidth: 1,
-    borderColor: '#f0f0f0',
-    alignItems: 'center',
-  },
-  statIcon: {
-    width: 48,
-    height: 48,
-    borderRadius: 16,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: 12,
-  },
-  statValue: {
-    fontSize: 20,
-    fontWeight: '800',
-    color: '#1a1a1a',
-    marginBottom: 2,
-  },
-  statLabel: {
-    fontSize: 12,
-    color: '#999',
-    fontWeight: '600',
-    textTransform: 'uppercase',
-  },
-  bottomCard: {
-    backgroundColor: '#6D5BFF',
-    borderRadius: 24,
-    padding: 24,
+  sectionHeader: {
     flexDirection: 'row',
-    alignItems: 'center',
     justifyContent: 'space-between',
-  },
-  bottomCardContent: {
-    flex: 1,
-  },
-  bottomTitle: {
-    color: '#fff',
-    fontSize: 18,
-    fontWeight: '700',
-    marginBottom: 4,
-  },
-  bottomText: {
-    color: 'rgba(255,255,255,0.8)',
-    fontSize: 14,
-    fontWeight: '500',
-  },
-  progressCircle: {
-    width: 60,
-    height: 60,
-    borderRadius: 30,
-    backgroundColor: 'rgba(255,255,255,0.2)',
     alignItems: 'center',
-    justifyContent: 'center',
-    borderWidth: 2,
-    borderColor: '#fff',
+    marginBottom: 20,
+    paddingHorizontal: 4,
   },
-  progressText: {
-    color: '#fff',
-    fontSize: 14,
-    fontWeight: '800',
+  sectionTitle: {
+    fontSize: 10,
+    fontFamily: 'DMSansMedium',
+    color: '#8B85CC',
+    textTransform: 'uppercase',
+    letterSpacing: 1.5,
+  },
+  seeMore: {
+    fontSize: 13,
+    fontFamily: 'DMSansMedium',
+    color: '#5B5BD6',
   },
 });

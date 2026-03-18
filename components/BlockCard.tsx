@@ -38,32 +38,22 @@ export default function BlockCard({ block }: Props) {
 
   return (
     <Animated.View style={[{ transform: [{ scale }] }]}>
-      <View style={[styles.card, !block.enabled && styles.cardDisabled]}>
+      <View style={[styles.card, !block.isEnabled && styles.cardDisabled]}>
         {/* Top row */}
         <View style={styles.topRow}>
           <View style={styles.iconContainer}>
-            {block.gradientColors ? (
-              <LinearGradient
-                colors={block.gradientColors as [string, string, ...string[]]}
-                style={styles.iconBg}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 1 }}
-              >
-                <MaterialCommunityIcons
-                  name={block.icon as any}
-                  size={24}
-                  color="#fff"
-                />
-              </LinearGradient>
-            ) : (
-              <View style={[styles.iconBg, { backgroundColor: block.iconColor }]}>
-                <MaterialCommunityIcons
-                  name={block.icon as any}
-                  size={24}
-                  color="#fff"
-                />
-              </View>
-            )}
+            <LinearGradient
+              colors={(block.gradientColors || ['#5B5BD6', '#8B5CF6']) as any}
+              style={styles.iconBg}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+            >
+              <MaterialCommunityIcons
+                name={block.icon as any}
+                size={24}
+                color="#fff"
+              />
+            </LinearGradient>
             {isActive && (
               <View style={styles.liveDot}>
                 <View style={styles.liveDotInner} />
@@ -90,13 +80,13 @@ export default function BlockCard({ block }: Props) {
             </TouchableOpacity>
 
             <TouchableOpacity 
-              style={[styles.actionBtn, block.enabled && styles.actionBtnActive]} 
+              style={[styles.actionBtn, block.isEnabled && styles.actionBtnActive]} 
               onPress={handlePress}
             >
               <MaterialCommunityIcons 
-                name="plus" 
-                size={18} 
-                color={block.enabled ? "#4A9EFF" : "#888"} 
+                name={block.isEnabled ? 'pause' : 'play'} 
+                size={20} 
+                color={block.isEnabled ? '#5B5BD6' : '#8B85CC'} 
               />
             </TouchableOpacity>
           </View>
@@ -104,7 +94,7 @@ export default function BlockCard({ block }: Props) {
 
         {/* Content */}
         <View style={styles.content}>
-          <Text style={[styles.name, !block.enabled && styles.textDisabled]}>
+          <Text style={[styles.name, !block.isEnabled && styles.textDisabled]}>
             {block.name}
           </Text>
           <Text style={styles.schedule}>{block.schedule}</Text>
@@ -120,7 +110,7 @@ export default function BlockCard({ block }: Props) {
                   styles.usageBarFill,
                   {
                     width: `${usagePercent}%` as any,
-                    backgroundColor: usagePercent > 80 ? '#FF6B6B' : '#6D5BFF',
+                    backgroundColor: usagePercent > 80 ? '#FF6B6B' : '#5B5BD6',
                   },
                 ]}
               />
@@ -151,15 +141,15 @@ const styles = StyleSheet.create({
     ...Platform.select({
       ios: {
         shadowColor: '#000',
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.05,
-        shadowRadius: 12,
+        shadowOffset: { width: 0, height: 8 },
+        shadowOpacity: 0.04,
+        shadowRadius: 16,
       },
       android: {
         elevation: 3,
       },
       web: {
-        boxShadow: '0 4px 12px rgba(0,0,0,0.05)',
+        boxShadow: '0 8px 16px rgba(0,0,0,0.04)',
       }
     } as any),
     borderWidth: 1,
@@ -172,57 +162,28 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'flex-start',
-    marginBottom: 16,
+    marginBottom: 20,
   },
   topActions: {
     flexDirection: 'row',
-    gap: 8,
+    gap: 10,
   },
-  liveBadge: {
-    backgroundColor: '#69DB7C',
-    paddingHorizontal: 8,
-    paddingVertical: 2,
-    borderRadius: 8,
-    alignSelf: 'center',
-  },
-  liveText: {
-    color: '#fff',
-    fontSize: 10,
-    fontWeight: '800',
-  },
-  liveDot: {
-    position: 'absolute',
-    bottom: -2,
-    right: -2,
-    width: 14,
-    height: 14,
-    borderRadius: 7,
+  appsBtn: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
     backgroundColor: '#fff',
     alignItems: 'center',
     justifyContent: 'center',
-  },
-  liveDotInner: {
-    width: 10,
-    height: 10,
-    borderRadius: 5,
-    backgroundColor: '#69DB7C',
-  },
-  appsBtn: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    backgroundColor: '#f5f5f5',
-    alignItems: 'center',
-    justifyContent: 'center',
     borderWidth: 1,
-    borderColor: '#eee',
+    borderColor: '#EBEBFF',
     position: 'relative',
   },
   badge: {
     position: 'absolute',
-    top: -4,
-    right: -4,
-    backgroundColor: '#6D5BFF',
+    top: -2,
+    right: -2,
+    backgroundColor: '#5B5BD6',
     borderRadius: 8,
     width: 16,
     height: 16,
@@ -234,70 +195,102 @@ const styles = StyleSheet.create({
   badgeText: {
     color: '#fff',
     fontSize: 8,
-    fontWeight: '800',
+    fontFamily: 'DMSansMedium',
   },
   iconContainer: {
-    shadowColor: '#000',
+    shadowColor: '#5B5BD6',
     shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.1,
+    shadowOpacity: 0.15,
     shadowRadius: 8,
     elevation: 4,
+    position: 'relative',
   },
   iconBg: {
-    width: 48,
-    height: 48,
-    borderRadius: 16,
+    width: 54,
+    height: 54,
+    borderRadius: 18,
     alignItems: 'center',
     justifyContent: 'center',
   },
+  liveBadge: {
+    backgroundColor: '#22C55E',
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 10,
+    alignSelf: 'center',
+  },
+  liveText: {
+    color: '#fff',
+    fontSize: 10,
+    fontFamily: 'DMSansMedium',
+    letterSpacing: 0.5,
+  },
+  liveDot: {
+    position: 'absolute',
+    bottom: -2,
+    right: -2,
+    width: 16,
+    height: 16,
+    borderRadius: 8,
+    backgroundColor: '#fff',
+    alignItems: 'center',
+    justifyContent: 'center',
+    zIndex: 10,
+  },
+  liveDotInner: {
+    width: 10,
+    height: 10,
+    borderRadius: 5,
+    backgroundColor: '#22C55E',
+  },
   actionBtn: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    backgroundColor: '#f5f5f5',
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: '#fff',
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 1,
-    borderColor: '#eee',
+    borderColor: '#EBEBFF',
   },
   actionBtnActive: {
-    backgroundColor: '#eef7ff',
-    borderColor: '#d0e8ff',
+    backgroundColor: '#EBEBFF',
+    borderColor: '#5B5BD6',
   },
   content: {
-    marginTop: 4,
+    marginTop: 0,
   },
   name: {
-    color: '#1a1a1a',
+    color: '#111111',
     fontSize: 20,
-    fontWeight: '700',
+    fontFamily: 'SyneSemiBold',
     letterSpacing: -0.5,
     marginBottom: 4,
   },
   textDisabled: {
-    color: '#888',
+    color: '#999',
   },
   schedule: {
-    color: '#666',
-    fontSize: 14,
-    fontWeight: '500',
+    color: '#8B85CC',
+    fontSize: 13,
+    fontFamily: 'DMSansMedium',
     marginBottom: 12,
   },
   tagline: {
-    color: '#888',
+    color: '#555555',
     fontSize: 14,
-    fontStyle: 'italic',
-    lineHeight: 20,
+    fontFamily: 'DMSansRegular',
+    lineHeight: 22,
   },
   usageRow: {
-    marginTop: 20,
+    marginTop: 24,
   },
   usageBarBg: {
     height: 6,
-    backgroundColor: '#f0f0f0',
+    backgroundColor: '#EBEBFF',
     borderRadius: 3,
     overflow: 'hidden',
-    marginBottom: 6,
+    marginBottom: 8,
   },
   usageBarFill: {
     height: '100%',
@@ -306,6 +299,7 @@ const styles = StyleSheet.create({
   usageText: {
     color: '#999',
     fontSize: 12,
+    fontFamily: 'DMSansRegular',
     textAlign: 'right',
     fontWeight: '500',
   },

@@ -41,17 +41,19 @@ export default function BarChart() {
             const barHeight = (item.value / maxValue) * CHART_HEIGHT;
             const x = GAP + index * (BAR_WIDTH + GAP);
             const y = CHART_HEIGHT - barHeight;
+            
+            // Image 4 style: Blue for weekdays, Red for weekend
+            const color = index >= 5 ? '#FF6B6B' : '#5B5BD6'; // Updated weekday color to Peak Indigo
 
             return (
               <G key={item.day}>
-                {/* Bar */}
                 <Rect
                   x={x}
                   y={y}
                   width={BAR_WIDTH}
                   height={barHeight}
                   rx={8}
-                  fill="url(#barGradient)"
+                  fill={color}
                 />
                 
                 {/* Day label */}
@@ -61,7 +63,7 @@ export default function BarChart() {
                   fontSize="12"
                   fill="#999"
                   textAnchor="middle"
-                  fontWeight="600"
+                  fontFamily="DMSansMedium" // Updated font family
                 >
                   {item.day}
                 </SvgText>
@@ -72,9 +74,9 @@ export default function BarChart() {
                     x={x + BAR_WIDTH / 2}
                     y={y - 8}
                     fontSize="10"
-                    fill="#6D5BFF"
+                    fill="#8B85CC" // Updated maxValue label color
                     textAnchor="middle"
-                    fontWeight="700"
+                    fontFamily="DMSansMedium" // Updated font family
                   >
                     {item.value}m
                   </SvgText>
