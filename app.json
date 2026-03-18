@@ -1,0 +1,29 @@
+{
+  "expo": {
+    "name": "AppBlock",
+    "slug": "appblock",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "scheme": "appblock",
+    "userInterfaceStyle": "light",
+    "splash": {
+      "backgroundColor": "#ffffff"
+    },
+    "ios": {
+      "supportsTablet": false,
+      "bundleIdentifier": "com.yourname.appblock"
+    },
+    "android": {
+      "adaptiveIcon": {
+        "backgroundColor": "#ffffff"
+      },
+      "package": "com.yourname.appblock"
+    },
+    "plugins": [
+      "expo-router",
+      "expo-asset",
+      "expo-font"
+    ],
+    "newArchEnabled": true
+  }
+}
