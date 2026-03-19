@@ -11,6 +11,7 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Block, useBlockStore } from '../store/blockStore';
 import AppPickerModal from './AppPickerModal';
+import { AppSelector } from './AppSelector';
 import { useBlockTimer } from '../hooks/useBlockTimer';
 
 interface Props {
@@ -18,7 +19,7 @@ interface Props {
 }
 
 export default function BlockCard({ block }: Props) {
-  const { toggleBlock, toggleBlockedApp } = useBlockStore();
+  const { toggleBlock, toggleBlockedApp, setSelection } = useBlockStore();
   const [showAppPicker, setShowAppPicker] = useState(false);
   const isActive = useBlockTimer(block);
   const scale = useRef(new Animated.Value(1)).current;
@@ -99,6 +100,16 @@ export default function BlockCard({ block }: Props) {
           </Text>
           <Text style={styles.schedule}>{block.schedule}</Text>
           <Text style={styles.tagline}>{block.tagline}</Text>
+          
+          {Platform.OS === 'ios' && (
+            <View style={styles.appSelectorContainer}>
+              <AppSelector 
+                selectionToken={block.selectionToken}
+                onSelectionChange={(token) => setSelection(block.id, token)}
+                title={block.selectionToken ? "Change Blocked Apps" : "Select Apps to Block"}
+              />
+            </View>
+          )}
         </View>
 
         {/* Usage bar */}
@@ -277,10 +288,12 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   tagline: {
-    color: '#555555',
     fontSize: 14,
     fontFamily: 'DMSansRegular',
     lineHeight: 22,
+  },
+  appSelectorContainer: {
+    marginTop: 16,
   },
   usageRow: {
     marginTop: 24,

@@ -1,6 +1,8 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { Platform } from 'react-native';
+import { blockSelection, unblockSelection } from 'react-native-device-activity';
 import { db } from '../lib/firebase';
 import { 
   collection, 
@@ -26,6 +28,7 @@ export interface Block {
   usageLimit?: number; // minutes
   usedMinutes?: number;
   blockedApps: string[];
+  selectionToken?: string; // Base64 token from FamilyActivitySelection
 }
 
 interface BlockStore {
@@ -39,6 +42,7 @@ interface BlockStore {
   toggleBlockedApp: (blockId: string, appName: string) => Promise<void>;
   completeOnboarding: () => void;
   syncFromCloud: () => void;
+  setSelection: (blockId: string, token: string) => Promise<void>;
   isLoading: boolean;
 }
 
@@ -97,10 +101,39 @@ export const useBlockStore = create<BlockStore>()(
           blocks: state.blocks.map((b) => b.id === id ? updatedBlock : b),
         }));
         
+        if (Platform.OS === 'ios' && block.selectionToken) {
+          try {
+            if (updatedBlock.isEnabled) {
+              blockSelection({ activitySelectionToken: block.selectionToken });
+            } else {
+              unblockSelection({ activitySelectionToken: block.selectionToken });
+            }
+          } catch (error) {
+            console.error('Native blocking error:', error);
+          }
+        }
+
         try {
           await setDoc(doc(db, COLLECTION_NAME, id), updatedBlock);
         } catch (error) {
           console.error('Error toggling block in Firestore:', error);
+        }
+      },
+
+      setSelection: async (blockId, token) => {
+        const block = get().blocks.find(b => b.id === blockId);
+        if (!block) return;
+
+        const updatedBlock = { ...block, selectionToken: token };
+        
+        set((state) => ({
+          blocks: state.blocks.map((b) => b.id === blockId ? updatedBlock : b),
+        }));
+
+        try {
+          await setDoc(doc(db, COLLECTION_NAME, blockId), updatedBlock);
+        } catch (error) {
+          console.error('Error setting selection in Firestore:', error);
         }
       },
 

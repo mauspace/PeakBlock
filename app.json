@@ -4,25 +4,49 @@
     "slug": "peakblock",
     "version": "1.0.0",
     "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "primaryColor": "#5B5BD6",
     "scheme": "appblock",
-    "userInterfaceStyle": "light",
+    "userInterfaceStyle": "dark",
     "splash": {
-      "backgroundColor": "#ffffff"
+      "image": "./assets/splash.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#000000"
     },
     "ios": {
       "supportsTablet": false,
-      "bundleIdentifier": "com.yourname.appblock"
+      "bundleIdentifier": "com.mauspace.peakblock",
+      "appleTeamId": "68NNUN57UA",
+      "entitlements": {
+        "com.apple.developer.family-controls": true
+      },
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
+      }
     },
     "android": {
       "adaptiveIcon": {
         "backgroundColor": "#ffffff"
       },
-      "package": "com.yourname.appblock"
+      "package": "com.mauspace.peakblock"
     },
     "plugins": [
       "expo-router",
       "expo-asset",
-      "expo-font"
-    ]
+      "expo-font",
+      [
+        "react-native-device-activity",
+        {
+          "appleTeamId": "68NNUN57UA",
+          "appGroup": "group.com.mauspace.peakblock"
+        }
+      ]
+    ],
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "302f3547-b626-47dd-9b9a-174b84d43f0e"
+      }
+    }
   }
 }

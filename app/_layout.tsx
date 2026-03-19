@@ -13,6 +13,7 @@ import {
 } from '@expo-google-fonts/dm-sans';
 
 import { useBlockStore } from '../store/blockStore';
+import { AuthorizationGate } from '../components/AuthorizationGate';
 
 SplashScreen.preventAutoHideAsync();
 
@@ -39,7 +40,7 @@ export default function RootLayout() {
     return null;
   }
 
-  return (
+  const content = (
     <Stack
       screenOptions={{
         headerShown: false,
@@ -49,4 +50,10 @@ export default function RootLayout() {
       <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
     </Stack>
   );
+
+  if (Platform.OS === 'ios') {
+    return <AuthorizationGate>{content}</AuthorizationGate>;
+  }
+
+  return content;
 }
